@@ -1,14 +1,10 @@
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey
 import enum
 
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Enum
+from sqlalchemy.orm import relationship, declarative_base
+
+
 Base = declarative_base()
-
-
-class PriorityEnum(enum.Enum):
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
 
 
 class UserModel(Base):
@@ -16,16 +12,23 @@ class UserModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, index=True)
-    tasks = relationship("Tasks", back_populates="user")
+    email = Column(String)
+    password_hash = Column(String)
+    tasks = relationship("TaskModel", back_populates="user")
 
 
-class Tasks(Base):
+class PriorityEnumModel(enum.Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+
+class TaskModel(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String)
     deadline = Column(DateTime)
-    priority = Column(Enum(PriorityEnum), index=True)
+    priority = Column(Enum(PriorityEnumModel), index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("UserModel", back_populates="tasks")
-
