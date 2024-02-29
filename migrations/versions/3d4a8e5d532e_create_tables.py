@@ -1,8 +1,8 @@
-"""Add Tasks table and User table
+"""create tables
 
-Revision ID: 8462b49c9fd4
+Revision ID: 3d4a8e5d532e
 Revises: 
-Create Date: 2024-02-23 02:03:47.325445
+Create Date: 2024-02-29 23:27:33.233458
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8462b49c9fd4'
+revision: str = '3d4a8e5d532e'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -23,6 +23,7 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(), nullable=True),
+    sa.Column('email', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
@@ -31,7 +32,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('deadline', sa.DateTime(), nullable=True),
-    sa.Column('priority', sa.Enum('LOW', 'MEDIUM', 'HIGH', name='priorityenum'), nullable=True),
+    sa.Column('priority', sa.Enum('LOW', 'MEDIUM', 'HIGH', name='priorityenummodel'), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

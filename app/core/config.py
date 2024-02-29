@@ -7,6 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+class AuthConfig:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    ALGORITHM = os.environ.get("ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
+
+
 class DBConfig:
     DB_USER = os.environ.get("POSTGRES_USER")
     DB_PASS = os.environ.get("POSTGRES_PASSWORD")
