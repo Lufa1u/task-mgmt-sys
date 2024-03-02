@@ -1,10 +1,29 @@
 import enum
 
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Enum
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Enum, Table
 from sqlalchemy.orm import relationship, declarative_base
 
 
 Base = declarative_base()
+
+
+user_task_association = Table(
+    'user_task_association', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('task_id', Integer, ForeignKey('tasks.id'))
+)
+
+
+class UserRoleEnumModel(enum.Enum):
+    USER = 1
+    MODERATOR = 2
+    ADMIN = 3
+
+
+class PriorityEnumModel(enum.Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
 
 
 class UserModel(Base):
@@ -14,13 +33,10 @@ class UserModel(Base):
     username = Column(String, index=True)
     email = Column(String)
     password_hash = Column(String)
-    tasks = relationship("TaskModel", back_populates="user")
+    user_role = Column(Enum(UserRoleEnumModel), index=True, nullable=False)
 
-
-class PriorityEnumModel(enum.Enum):
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
+    tasks = relationship("TaskModel", secondary="user_task_association", back_populates="users")
+    created_tasks = relationship("TaskModel", back_populates="users")
 
 
 class TaskModel(Base):
@@ -29,6 +45,8 @@ class TaskModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String)
     deadline = Column(DateTime)
-    priority = Column(Enum(PriorityEnumModel), index=True)
+    priority = Column(Enum(PriorityEnumModel), index=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("UserModel", back_populates="tasks")
+
+    users = relationship("UserModel", secondary="user_task_association", back_populates="tasks")
+    creator = relationship("UserModel", back_populates="tasks", overlaps="created_tasks")
