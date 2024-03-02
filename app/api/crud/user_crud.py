@@ -27,6 +27,7 @@ async def get_current_user(db: AsyncSession, token: str):
         if username is None:
             raise credentials_exception
     except jwt.PyJWTError as e:
+        # TODO: Invalid token type. Token must be a <class 'bytes'>
         print(e)
         raise credentials_exception
 
