@@ -22,8 +22,14 @@ class DBConfig:
     DB_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 
 
+class AdminConfig:
+    USERNAME = os.environ.get("USER_NAME")
+    PASSWORD = os.environ.get("PASSWORD")
+    EMAIL = os.environ.get("EMAIL")
+
+
 async def get_db():
     engine = create_async_engine(DBConfig.DB_URL, future=True)
     async_session = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=AsyncSession)
     async with async_session() as session:
-        yield session
+        return session
