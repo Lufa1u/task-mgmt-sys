@@ -5,8 +5,9 @@ from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import selectinload
 
 from app.api.models.models import UserModel, UserRoleEnumModel
 from app.api.schemas.user_schemas import UserCreateSchema, UserSchema
@@ -26,15 +27,17 @@ async def get_current_user(db: AsyncSession, token: str):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except jwt.PyJWTError as e:
-        # TODO: Invalid token type. Token must be a <class 'bytes'>
-        print(e)
+    except jwt.PyJWTError:
         raise credentials_exception
 
-    user = (await db.execute(select(UserModel).where(UserModel.username == username))).scalar_one_or_none()
-    if user is None:
+    user = (await db.execute(select(UserModel).filter(UserModel.username == username).options(
+        selectinload(UserModel.tasks),
+        selectinload(UserModel.created_tasks)
+    ))).scalar_one_or_none()
+    if not user:
         raise credentials_exception
-    return UserSchema(id=user.id, username=user.username, email=user.email, role=user.user_role)
+    return UserModel(id=user.id, username=user.username, email=user.email, user_role=user.user_role,
+                     tasks=user.tasks, created_tasks=user.created_tasks)
 
 
 async def signup(user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
@@ -42,9 +45,12 @@ async def signup(user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumMod
         select(UserModel).filter(or_(UserModel.username == user.username,
                                      UserModel.email == user.email)))).scalar()
     if existing_user:
-        if existing_user.user_role == UserRoleEnumModel.ADMIN:
+        if existing_user.user_role == UserRoleEnumModel.ADMIN and \
+                (existing_user.username == user.username or existing_user.username == user.email):
+            return
+        elif existing_user.user_role == UserRoleEnumModel.ADMIN and \
+                (existing_user.username != user.username or existing_user.username != user.email):
             await db.delete(existing_user)
-            await db.commit()
         else:
             raise HTTPException(status_code=409, detail="User already exists")
     new_user = UserModel(
@@ -71,15 +77,21 @@ async def login(form_data: OAuth2PasswordRequestForm, db: AsyncSession):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def create_moderator(current_user: UserModel, user: UserCreateSchema, db: AsyncSession):
+async def create_moderator(new_user: UserCreateSchema, current_user: UserModel, db: AsyncSession):
     if current_user.user_role != UserRoleEnumModel.ADMIN:
         raise HTTPException(status_code=403, detail="Not enough rights")
+
+    if (await db.execute(select(UserModel).filter(or_(
+            UserModel.username == new_user.username, UserModel.email == new_user.email)))).scalar():
+        raise HTTPException(status_code=409, detail="User already exists")
+
     new_user = UserModel(
-        username=user.username,
-        password_hash=pwd_context.hash(user.password),
-        email=user.email,
+        username=new_user.username,
+        password_hash=pwd_context.hash(new_user.password),
+        email=new_user.email,
         user_role=UserRoleEnumModel.MODERATOR
     )
     db.add(new_user)
     await db.commit()
+    await db.refresh(new_user)
     return UserSchema(id=new_user.id, username=new_user.username, email=new_user.email, role=new_user.user_role)
