@@ -31,13 +31,12 @@ async def get_current_user(db: AsyncSession, token: str):
         raise credentials_exception
 
     user = (await db.execute(select(UserModel).filter(UserModel.username == username).options(
-        selectinload(UserModel.tasks),
+        selectinload(UserModel.assigned_tasks),
         selectinload(UserModel.created_tasks)
     ))).scalar_one_or_none()
     if not user:
         raise credentials_exception
-    return UserModel(id=user.id, username=user.username, email=user.email, user_role=user.user_role,
-                     tasks=user.tasks, created_tasks=user.created_tasks)
+    return user
 
 
 async def signup(user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
