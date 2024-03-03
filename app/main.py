@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI
 
 from app.api.routers.router import router
 from app.core.config import get_db, AdminConfig
@@ -14,7 +13,7 @@ app.include_router(router=router, prefix="/tasks", tags=["TASKS"])
 
 @app.on_event("startup")
 async def on_startup():
-    db = await get_db()
-    admin = UserCreateSchema(username=AdminConfig.USERNAME, password=AdminConfig.PASSWORD,
-                             email=AdminConfig.EMAIL)
-    await signup(user=admin, db=db, role=UserRoleEnumModel.ADMIN)
+    async with await get_db() as db:
+        admin = UserCreateSchema(username=AdminConfig.USERNAME, password=AdminConfig.PASSWORD,
+                                 email=AdminConfig.EMAIL)
+        await signup(user=admin, db=db, role=UserRoleEnumModel.ADMIN)
