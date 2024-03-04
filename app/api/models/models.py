@@ -36,7 +36,7 @@ class UserModel(Base):
     role = Column(Enum(UserRoleEnumModel), index=True, nullable=False)
 
     created_tasks = relationship("TaskModel", back_populates="creator_user")
-    assigned_tasks = relationship("TaskModel", secondary="user_task_association", back_populates="assigned_users")
+    assigned_tasks = relationship("TaskModel", secondary="user_task_association", back_populates="assigned_users", single_parent=True)
 
 
 class TaskModel(Base):
@@ -50,4 +50,4 @@ class TaskModel(Base):
     creator_user_id = Column(Integer, ForeignKey("users.id"))
     creator_user = relationship("UserModel", back_populates="created_tasks")
 
-    assigned_users = relationship("UserModel", secondary="user_task_association", back_populates="assigned_tasks")
+    assigned_users = relationship("UserModel", secondary="user_task_association", back_populates="assigned_tasks", single_parent=True)
