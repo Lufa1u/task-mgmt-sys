@@ -38,3 +38,12 @@ async def assign_task_to_users(assign_task: AssignTaskSchema, role: UserRoleEnum
     await db.commit()
     await db.refresh(task)
     return set(assigned_user_ids)
+
+
+async def delete_task(task_id: int, current_user: UserModel, db: AsyncSession):
+    if task_id not in [task.id for task in current_user.created_tasks]:
+        raise HTTPException(status_code=403, detail="Not enough rights")
+    task = (await db.execute(select(TaskModel).where(TaskModel.id == task_id))).scalar_one_or_none()
+    await db.delete(task)
+    await db.commit()
+    return f"Task with id {task_id} was deleted"

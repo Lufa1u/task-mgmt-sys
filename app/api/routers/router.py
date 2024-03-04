@@ -14,6 +14,11 @@ from app.core.config import get_db
 router = APIRouter()
 
 
+@router.get("/get_current_user")
+async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="tasks/login")), db: AsyncSession = Depends(get_db)):
+    return await user_crud.get_current_user(token=token, db=db)
+
+
 @router.post("/signup", response_model=UserSchema)
 async def signup(user: UserCreateSchema, db: AsyncSession = Depends(get_db)):
     return await user_crud.signup(user=user, db=db)
@@ -22,11 +27,6 @@ async def signup(user: UserCreateSchema, db: AsyncSession = Depends(get_db)):
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     return await user_crud.login(form_data=form_data, db=db)
-
-
-@router.get("/get_current_user")
-async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="tasks/login")), db: AsyncSession = Depends(get_db)):
-    return await user_crud.get_current_user(token=token, db=db)
 
 
 @router.post("/create_moderator_user")
@@ -46,5 +46,9 @@ async def assign_task_to_users(assign_task: AssignTaskSchema, current_user: User
                                db: AsyncSession = Depends(get_db)):
     return await task_crud.assign_task_to_users(assign_task=assign_task, role=current_user.role, db=db)
 
+
+@router.delete("/delete_task")
+async def delete_task(task_id: int, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await task_crud.delete_task(task_id=task_id, current_user=current_user, db=db)
 
 
