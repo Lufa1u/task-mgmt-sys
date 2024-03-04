@@ -9,7 +9,7 @@ class CreateTaskSchema(BaseModel):
     description: str
     deadline: datetime
     priority: PriorityEnumModel
-    user_ids: list[int] | None = None
+    assigned_user_ids: list[int] | None = None
 
 
 class TaskSchema(BaseModel):
@@ -17,6 +17,11 @@ class TaskSchema(BaseModel):
     description: str
     deadline: datetime
     priority: PriorityEnumModel
-    assigned_users: list[int]
-    creator_id: int
+    assigned_user_ids: list[int]
+    creator_user_id: int
+
+
+class AssignTaskSchema(BaseModel):
+    task_id: int
+    assigned_user_ids: list[int]
 

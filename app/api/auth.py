@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from app.core.config import AuthConfig
+from app.core.config import Auth
 from jwt import encode
 from passlib.context import CryptContext
 
@@ -14,5 +14,5 @@ async def create_access_token(data: dict, expires_delta: timedelta = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = encode(to_encode, AuthConfig.SECRET_KEY, algorithm=AuthConfig.ALGORITHM)
+    encoded_jwt = encode(to_encode, Auth.SECRET_KEY, algorithm=Auth.ALGORITHM)
     return encoded_jwt
