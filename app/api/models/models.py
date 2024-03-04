@@ -33,9 +33,9 @@ class UserModel(Base):
     username = Column(String, index=True)
     email = Column(String)
     password_hash = Column(String)
-    user_role = Column(Enum(UserRoleEnumModel), index=True, nullable=False)
+    role = Column(Enum(UserRoleEnumModel), index=True, nullable=False)
 
-    created_tasks = relationship("TaskModel", back_populates="creator")
+    created_tasks = relationship("TaskModel", back_populates="creator_user")
     assigned_tasks = relationship("TaskModel", secondary="user_task_association", back_populates="assigned_users")
 
 
@@ -47,7 +47,7 @@ class TaskModel(Base):
     deadline = Column(DateTime)
     priority = Column(Enum(PriorityEnumModel), index=True, nullable=False)
 
-    creator_id = Column(Integer, ForeignKey("users.id"))
-    creator = relationship("UserModel", back_populates="created_tasks")
+    creator_user_id = Column(Integer, ForeignKey("users.id"))
+    creator_user = relationship("UserModel", back_populates="created_tasks")
 
     assigned_users = relationship("UserModel", secondary="user_task_association", back_populates="assigned_tasks")

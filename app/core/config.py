@@ -7,13 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class AuthConfig:
+class Auth:
     SECRET_KEY = os.environ.get("SECRET_KEY")
     ALGORITHM = os.environ.get("ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 
-class DBConfig:
+class DataBase:
     DB_USER = os.environ.get("POSTGRES_USER")
     DB_PASS = os.environ.get("POSTGRES_PASSWORD")
     DB_HOST = os.environ.get("POSTGRES_HOST")
@@ -22,14 +22,14 @@ class DBConfig:
     DB_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 
 
-class AdminConfig:
+class Admin:
     USERNAME = os.environ.get("USER_NAME")
     PASSWORD = os.environ.get("PASSWORD")
     EMAIL = os.environ.get("EMAIL")
 
 
 async def get_db():
-    engine = create_async_engine(DBConfig.DB_URL, future=True)
+    engine = create_async_engine(DataBase.DB_URL, future=True)
     async_session = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=AsyncSession)
     async with async_session() as session:
         return session

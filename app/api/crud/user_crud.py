@@ -12,10 +12,11 @@ from sqlalchemy.orm import selectinload
 from app.api.models.models import UserModel, UserRoleEnumModel
 from app.api.schemas.user_schemas import UserCreateSchema, UserSchema
 from app.api.auth import pwd_context, create_access_token
-from app.core.config import AuthConfig
+from app.core.config import Auth
 from app.celery_tasks.celery_worker import celery_app
 
 
+# TODO: hide password_hash!!!
 async def get_current_user(db: AsyncSession, token: str):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -23,7 +24,7 @@ async def get_current_user(db: AsyncSession, token: str):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, AuthConfig.SECRET_KEY, algorithms=[AuthConfig.ALGORITHM])
+        payload = jwt.decode(token, Auth.SECRET_KEY, algorithms=[Auth.ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -40,30 +41,30 @@ async def get_current_user(db: AsyncSession, token: str):
 
 
 async def signup(user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
-    existing_user = (await db.execute(
+    exist_user = (await db.execute(
         select(UserModel).filter(or_(UserModel.username == user.username,
                                      UserModel.email == user.email)))).scalar()
-    if existing_user:
-        if existing_user.user_role == UserRoleEnumModel.ADMIN and \
-                (existing_user.username == user.username or existing_user.username == user.email):
+    if exist_user:
+        if exist_user.role == UserRoleEnumModel.ADMIN and \
+                (exist_user.username == user.username or exist_user.username == user.email):
             return
-        elif existing_user.user_role == UserRoleEnumModel.ADMIN and \
-                (existing_user.username != user.username or existing_user.username != user.email):
-            await db.delete(existing_user)
+        elif exist_user.role == UserRoleEnumModel.ADMIN and \
+                (exist_user.username != user.username or exist_user.username != user.email):
+            await db.delete(exist_user)
         else:
             raise HTTPException(status_code=409, detail="User already exists")
     new_user = UserModel(
         username=user.username,
         password_hash=pwd_context.hash(user.password),
         email=user.email,
-        user_role=role
+        role=role
     )
 
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
 
-    return UserSchema(id=new_user.id, username=new_user.username, email=new_user.email, role=new_user.user_role)
+    return UserSchema(id=new_user.id, username=new_user.username, email=new_user.email, role=new_user.role)
 
 
 async def login(form_data: OAuth2PasswordRequestForm, db: AsyncSession):
@@ -71,26 +72,26 @@ async def login(form_data: OAuth2PasswordRequestForm, db: AsyncSession):
     if not user or not pwd_context.verify(form_data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-    access_token_expires = timedelta(minutes=AuthConfig.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def create_moderator(new_user: UserCreateSchema, current_user: UserModel, db: AsyncSession):
-    if current_user.user_role != UserRoleEnumModel.ADMIN:
+async def create_moderator_user(user: UserCreateSchema, current_user: UserModel, db: AsyncSession):
+    if current_user.role != UserRoleEnumModel.ADMIN:
         raise HTTPException(status_code=403, detail="Not enough rights")
 
     if (await db.execute(select(UserModel).filter(or_(
-            UserModel.username == new_user.username, UserModel.email == new_user.email)))).scalar():
+            UserModel.username == user.username, UserModel.email == user.email)))).scalar():
         raise HTTPException(status_code=409, detail="User already exists")
 
-    new_user = UserModel(
-        username=new_user.username,
-        password_hash=pwd_context.hash(new_user.password),
-        email=new_user.email,
-        user_role=UserRoleEnumModel.MODERATOR
+    user = UserModel(
+        username=user.username,
+        password_hash=pwd_context.hash(user.password),
+        email=user.email,
+        role=UserRoleEnumModel.MODERATOR
     )
-    db.add(new_user)
+    db.add(user)
     await db.commit()
-    await db.refresh(new_user)
-    return UserSchema(id=new_user.id, username=new_user.username, email=new_user.email, role=new_user.user_role)
+    await db.refresh(user)
+    return UserSchema(id=user.id, username=user.username, email=user.email, role=user.role)
