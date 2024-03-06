@@ -10,9 +10,10 @@ class UserCreateSchema(BaseModel):
 
 
 class UserSchema(BaseModel):
-    id: int
-    username: str
-    email: str
-    role: UserRoleEnumModel
+    id: int | None = None
+    username: str | None = None
+    email: str | None = None
+    role: UserRoleEnumModel | None = None
+
 
 

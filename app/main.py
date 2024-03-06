@@ -16,4 +16,4 @@ async def on_startup():
     async with await get_db() as db:
         admin = UserCreateSchema(username=Admin.USERNAME, password=Admin.PASSWORD,
                                  email=Admin.EMAIL)
-        await signup(user=admin, db=db, role=UserRoleEnumModel.ADMIN)
+        await signup(new_user=admin, db=db, role=UserRoleEnumModel.ADMIN)
