@@ -12,40 +12,11 @@ from sqlalchemy.orm import selectinload
 from app.api.models.models import UserModel, UserRoleEnumModel
 from app.api.schemas.user_schemas import UserCreateSchema, UserSchema
 from app.api.auth import pwd_context, create_access_token
-from app.core.config import Auth
+from app.core.config import Auth, CustomException
 from app.celery_tasks.celery_worker import celery_app
 
 
-class USERException(HTTPException):
-    def __init__(self, status_code: int, detail: str):
-        super().__init__(status_code=status_code, detail=detail)
-
-    @classmethod
-    async def credentials_exception(cls):
-        return cls(status_code=401, detail="Could not validate credentials")
-
-    @classmethod
-    async def not_enough_rights(cls):
-        return cls(status_code=403, detail="Not enough rights")
-
-    @classmethod
-    async def incorrect_username_or_password(cls):
-        return cls(status_code=400, detail="Incorrect username or password")
-
-    @classmethod
-    async def user_not_found(cls):
-        return cls(status_code=404, detail="User not found")
-
-    @classmethod
-    async def user_already_exist(cls):
-        return cls(status_code=409, detail="User already exists")
-
-    @classmethod
-    async def custom_exception(cls, status_code: int, detail: str):
-        return cls(status_code=status_code, detail=detail)
-
-
-async def check_entity_or_throw_exception(entity: any, must_exist: bool, exception: USERException):
+async def check_entity_or_throw_exception(entity: any, must_exist: bool, exception: CustomException):
     if must_exist:
         if not entity:
             raise exception
@@ -70,7 +41,7 @@ async def get_user_by_username(username: str, db: AsyncSession):
     ))).scalar_one_or_none()
 
 
-async def check_password_verify_or_throw_error(password: str, hash: str, exception: USERException):
+async def check_password_verify_or_throw_error(password: str, hash: str, exception: CustomException):
     if not pwd_context.verify(password, hash):
         raise exception
 
@@ -78,9 +49,9 @@ async def check_password_verify_or_throw_error(password: str, hash: str, excepti
 # TODO: hide password_hash!!!
 async def get_current_user(db: AsyncSession, token: str):
     username = await get_username_using_token(token=token)
-    await check_entity_or_throw_exception(entity=username, must_exist=True, exception=await USERException.credentials_exception())
+    await check_entity_or_throw_exception(entity=username, must_exist=True, exception=await CustomException.credentials_exception())
     user = await get_user_by_username(username=username, db=db)
-    await check_entity_or_throw_exception(entity=user, must_exist=True, exception=await USERException.user_not_found())
+    await check_entity_or_throw_exception(entity=user, must_exist=True, exception=await CustomException.user_not_found())
     return user
 
 
@@ -102,7 +73,7 @@ async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnu
         if not await check_administrator_change(user=exist_user, new_user=new_user):
             return UserSchema(**exist_user.__dict__)
         await delete_user(exist_user, db=db)
-    await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await USERException.user_already_exist())
+    await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await CustomException.user_already_exist())
 
     # if role != UserRoleEnumModel.ADMIN:
     #     await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await USERException.user_already_exist())
@@ -128,9 +99,9 @@ async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnu
 async def login(form_data: OAuth2PasswordRequestForm, db: AsyncSession):
     user = await get_user_by_username(username=form_data.username, db=db)
 
-    await check_entity_or_throw_exception(entity=user, must_exist=True, exception=await USERException.user_not_found())
+    await check_entity_or_throw_exception(entity=user, must_exist=True, exception=await CustomException.user_not_found())
     await check_password_verify_or_throw_error(password=form_data.password, hash=user.password_hash,
-                                               exception=await USERException.incorrect_username_or_password())
+                                               exception=await CustomException.incorrect_username_or_password())
 
     access_token = await create_access_token(data={"sub": user.username}, expires_delta=timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": access_token, "token_type": "bearer"}
@@ -145,10 +116,10 @@ async def get_user_with_filter_or(user_variables: UserSchema, db: AsyncSession):
 
 async def create_moderator_user(user: UserCreateSchema, current_user: UserModel, db: AsyncSession):
     if current_user.role != UserRoleEnumModel.ADMIN:
-        await USERException.not_enough_rights()
+        await CustomException.not_enough_rights()
 
     user_in_database = await get_user_with_filter_or(UserSchema(username=user.username, email=user.email), db=db)
-    await check_entity_or_throw_exception(entity=user_in_database, must_exist=False, exception=await USERException.user_already_exist())
+    await check_entity_or_throw_exception(entity=user_in_database, must_exist=False, exception=await CustomException.user_already_exist())
 
     user = UserModel(
         username=user.username,

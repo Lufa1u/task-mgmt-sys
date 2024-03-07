@@ -1,6 +1,10 @@
+from fastapi import HTTPException
+
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+
 import os
+
 from dotenv import load_dotenv
 
 
@@ -33,3 +37,32 @@ async def get_db():
     async_session = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=AsyncSession)
     async with async_session() as session:
         return session
+
+
+class CustomException(HTTPException):
+    def __init__(self, status_code: int, detail: str):
+        super().__init__(status_code=status_code, detail=detail)
+
+    @classmethod
+    async def credentials_exception(cls):
+        return cls(status_code=401, detail="Could not validate credentials")
+
+    @classmethod
+    async def not_enough_rights(cls):
+        return cls(status_code=403, detail="Not enough rights")
+
+    @classmethod
+    async def incorrect_username_or_password(cls):
+        return cls(status_code=400, detail="Incorrect username or password")
+
+    @classmethod
+    async def user_not_found(cls):
+        return cls(status_code=404, detail="User not found")
+
+    @classmethod
+    async def user_already_exist(cls):
+        return cls(status_code=409, detail="User already exists")
+
+    @classmethod
+    async def custom_exception(cls, status_code: int, detail: str):
+        return cls(status_code=status_code, detail=detail)
