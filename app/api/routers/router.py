@@ -19,6 +19,11 @@ async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="t
     return await user_crud.get_current_user(token=token, db=db)
 
 
+@router.get("/get_task_by_id")
+async def get_task_by_id(task_id: int, db: AsyncSession = Depends(get_db)):
+    return await task_crud.get_task_by_id(task_id=task_id, db=db)
+
+
 @router.post("/signup", response_model=UserSchema)
 async def signup(new_user: UserCreateSchema, db: AsyncSession = Depends(get_db)):
     return await user_crud.signup(new_user=new_user, db=db)
