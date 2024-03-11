@@ -23,11 +23,11 @@ async def create_task_instance(creator_user_id: int, task: CreateTaskSchema, ass
 
 
 async def create_task(task: CreateTaskSchema, current_user: UserModel, db: AsyncSession):
-    if current_user.role == UserRoleEnumModel.USER:
+    if current_user.role == UserRoleEnumModel.USER and task.assigned_user_ids:
         raise await CustomException.not_enough_rights()
 
     assign_users = [current_user]
-    if task.assigned_user_ids != 0:
+    if task.assigned_user_ids:
         assign_users += await get_users_by_ids(task.assigned_user_ids, db=db)
 
     new_task = await create_task_instance(creator_user_id=current_user.id, task=task, assign_users=assign_users)

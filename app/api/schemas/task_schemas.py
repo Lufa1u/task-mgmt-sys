@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 from datetime import datetime
@@ -9,7 +11,7 @@ class CreateTaskSchema(BaseModel):
     description: str
     deadline: datetime
     priority: PriorityEnumModel
-    assigned_user_ids: list[int] | None = None
+    assigned_user_ids: list[int] = []
 
 
 class TaskSchema(BaseModel):
