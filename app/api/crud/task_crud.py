@@ -9,7 +9,10 @@ from app.core.config import CustomException
 
 
 async def get_task_by_id(task_id: int, db: AsyncSession):
-    return (await db.execute(select(TaskModel).where(TaskModel.id == task_id))).scalar_one_or_none()
+    task = (await db.execute(select(TaskModel).where(TaskModel.id == task_id))).scalar_one_or_none()
+    if not task:
+        raise await CustomException.task_not_found()
+    return task
 
 
 async def create_task_instance(creator_user_id: int, task: CreateTaskSchema, assign_users: list[UserModel]):

@@ -64,5 +64,9 @@ class CustomException(HTTPException):
         return cls(status_code=409, detail="User already exists")
 
     @classmethod
+    async def task_not_found(cls):
+        return cls(status_code=404, detail="Task not found")
+
+    @classmethod
     async def custom_exception(cls, status_code: int, detail: str):
         return cls(status_code=status_code, detail=detail)
