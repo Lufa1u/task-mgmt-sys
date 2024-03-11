@@ -1,12 +1,13 @@
 from datetime import timedelta
 
 import jwt
+
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import selectinload
 
 from app.api.models.models import UserModel, UserRoleEnumModel
 from app.api.schemas.user_schemas import UserCreateSchema, UserSchema
@@ -67,6 +68,7 @@ async def check_administrator_change(user: UserModel, new_user: UserCreateSchema
 
 async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
     exist_user = await get_user_with_filter_or(UserSchema(username=new_user.username, email=new_user.email), db=db)
+    print(exist_user)
     # TODO: баг с заменой админа на 104
     if role == UserRoleEnumModel.ADMIN and exist_user:
         if not await check_administrator_change(user=exist_user, new_user=new_user):
@@ -115,7 +117,7 @@ async def get_user_with_filter_or(user_variables: UserSchema, db: AsyncSession):
 
 async def create_moderator_user(user: UserCreateSchema, current_user: UserModel, db: AsyncSession):
     if current_user.role != UserRoleEnumModel.ADMIN:
-        await CustomException.not_enough_rights()
+        raise await CustomException.not_enough_rights()
 
     user_in_database = await get_user_with_filter_or(UserSchema(username=user.username, email=user.email), db=db)
     await check_entity_or_throw_exception(entity=user_in_database, must_exist=False, exception=await CustomException.user_already_exist())
