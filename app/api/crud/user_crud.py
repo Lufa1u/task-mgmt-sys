@@ -58,7 +58,7 @@ async def get_current_user(db: AsyncSession, token: str):
 async def delete_user(user: UserModel, db: AsyncSession):
     await db.delete(user)
     await db.commit()
-    await db.refresh(user)
+    return UserSchema(**user.__dict__)
 
 
 async def check_administrator_change(user: UserModel, new_user: UserCreateSchema):

@@ -52,3 +52,7 @@ async def delete_task(task_id: int, current_user: UserModel = Depends(get_curren
     return await task_crud.delete_task(task_id=task_id, current_user=current_user, db=db)
 
 
+@router.delete("/delete_user")
+async def delete_user(current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await user_crud.delete_user(user=current_user, db=db)
+
