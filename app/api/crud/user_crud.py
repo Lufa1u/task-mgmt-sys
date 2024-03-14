@@ -132,3 +132,7 @@ async def create_moderator_user(user: UserCreateSchema, current_user: UserModel,
     await db.commit()
     await db.refresh(user)
     return UserSchema(id=user.id, username=user.username, email=user.email, role=user.role)
+
+
+async def update_user(user_schema: UserSchema, current_user: UserModel, db: AsyncSession):
+    pass

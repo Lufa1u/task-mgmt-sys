@@ -81,3 +81,7 @@ async def delete_task(task_id: int, current_user: UserModel, db: AsyncSession):
     await db.delete(task)
     await db.commit()
     return f"Task with id {task_id} was deleted"
+
+
+async def update_task(task_schema: TaskSchema, user: UserModel, db: AsyncSession):
+    pass
