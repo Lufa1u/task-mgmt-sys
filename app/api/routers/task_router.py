@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.crud import task_crud
 from app.api.models.models import UserModel
 from app.api.routers.user_router import get_current_user
-from app.api.schemas.task_schemas import CreateTaskSchema, AssignTaskSchema
+from app.api.schemas.task_schemas import CreateTaskSchema, AssignTaskSchema, TaskSchema
 from app.core.config import get_db
 
 
@@ -27,6 +27,11 @@ async def create_task(task: CreateTaskSchema, current_user: UserModel = Depends(
 async def assign_task_to_users(assign_task: AssignTaskSchema, current_user: UserModel = Depends(get_current_user),
                                db: AsyncSession = Depends(get_db)):
     return await task_crud.assign_task_to_users(assign_task=assign_task, role=current_user.role, db=db)
+
+
+@task_router.put("/update_task")
+async def update_task(task_schema: TaskSchema, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await task_crud.update_task(task_schema=task_schema, user=current_user, db=db)
 
 
 @task_router.delete("/delete_task")
