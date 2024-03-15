@@ -26,7 +26,7 @@ async def create_moderator_user(user: UserCreateSchema, current_user: UserModel 
 
 @user_router.put("/update_user")
 async def update_user(user_schema: UserSchema, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    return await user_crud.update_user(user_schema=user_schema, user=current_user, db=db)
+    return await user_crud.update_user(user_schema=user_schema, current_user=current_user, db=db)
 
 
 @user_router.delete("/delete_user")
