@@ -27,3 +27,10 @@ class AssignTaskSchema(BaseModel):
     task_id: int
     assigned_user_ids: list[int]
 
+
+class UpdateTaskSchema(BaseModel):
+    id: int
+    description: str
+    deadline: datetime
+    priority: PriorityEnumModel
+

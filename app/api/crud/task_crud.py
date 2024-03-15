@@ -1,10 +1,10 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import selectinload
 
-from app.api.models.models import UserModel, TaskModel, UserRoleEnumModel
-from app.api.schemas.task_schemas import TaskSchema, CreateTaskSchema, AssignTaskSchema
+from app.api.models.models import UserModel, TaskModel, UserRoleEnumModel, user_task_association
+from app.api.schemas.task_schemas import TaskSchema, CreateTaskSchema, AssignTaskSchema, UpdateTaskSchema
 from app.core.config import CustomException
 
 
@@ -65,12 +65,23 @@ async def assign_task_to_users(assign_task: AssignTaskSchema, role: UserRoleEnum
 
     await db.commit()
     await db.refresh(task)
-    return set(assigned_user_ids)
+    return f"Task was assigned for next users: {set(assigned_user_ids)}"
+
+
+async def remove_task_from_assignment_users(assign_task: AssignTaskSchema, current_user: UserModel, db: AsyncSession):
+    await check_task_belongs_to_user_or_throw_exception(task_id=assign_task.task_id, user=current_user)
+
+    result = await db.execute(delete(user_task_association).where(((user_task_association.c.user_id.in_(assign_task.assigned_user_ids)) &
+        (user_task_association.c.task_id == assign_task.task_id) &
+        (user_task_association.c.user_id != current_user.id))))
+
+    await db.commit()
+    return f"{result.rowcount} assigned users was removed"
 
 
 async def check_task_belongs_to_user_or_throw_exception(task_id: int, user: UserModel):
-    user_created_tasks = [task.id for task in user.created_tasks]
-    if task_id not in user_created_tasks:
+    user_created_task_ids = [task.id for task in user.created_tasks]
+    if task_id not in user_created_task_ids:
         raise await CustomException.not_enough_rights()
 
 
@@ -83,5 +94,13 @@ async def delete_task(task_id: int, current_user: UserModel, db: AsyncSession):
     return f"Task with id {task_id} was deleted"
 
 
-async def update_task(task_schema: TaskSchema, user: UserModel, db: AsyncSession):
-    pass
+async def update_task(new_task: UpdateTaskSchema, current_user: UserModel, db: AsyncSession):
+    await check_task_belongs_to_user_or_throw_exception(task_id=new_task.id, user=current_user)
+
+    task = await get_task_by_id(task_id=new_task.id, db=db)
+    task.description = new_task.description
+    task.deadline = new_task.deadline.date()
+    task.priority = new_task.priority
+    await db.commit()
+    await db.refresh(task)
+    return task
