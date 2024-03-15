@@ -68,7 +68,6 @@ async def check_administrator_change(user: UserModel, new_user: UserCreateSchema
 
 async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
     exist_user = await get_user_with_filter_or(UserSchema(username=new_user.username, email=new_user.email), db=db)
-    print(exist_user)
     # TODO: баг с заменой админа на 104
     if role == UserRoleEnumModel.ADMIN and exist_user:
         if not await check_administrator_change(user=exist_user, new_user=new_user):
