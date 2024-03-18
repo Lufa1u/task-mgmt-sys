@@ -75,13 +75,6 @@ async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnu
         await delete_user(exist_user, db=db)
     await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await CustomException.user_already_exist())
 
-    # if role != UserRoleEnumModel.ADMIN:
-    #     await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await USERException.user_already_exist())
-    # else:
-    #     if await check_administrator_change(user=exist_user, new_user=new_user):
-    #         await delete_user(exist_user, db=db)
-    #     else:
-    #         return UserSchema(**exist_user.__dict__)
     new_user = UserModel(
         username=new_user.username,
         password_hash=pwd_context.hash(new_user.password),
