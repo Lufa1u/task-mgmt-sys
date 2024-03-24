@@ -126,5 +126,7 @@ async def create_moderator_user(user: UserCreateSchema, current_user: UserModel,
     return UserSchema(id=user.id, username=user.username, email=user.email, role=user.role)
 
 
-async def update_user(user_schema: UserSchema, current_user: UserModel, db: AsyncSession):
-    pass
+async def update_user_password(new_password: str, current_user: UserModel, db: AsyncSession):
+    current_user.password_hash = pwd_context.hash(new_password)
+    await db.commit()
+    return f"Password was change to: {new_password}"

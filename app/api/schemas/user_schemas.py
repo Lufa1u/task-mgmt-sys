@@ -14,6 +14,3 @@ class UserSchema(BaseModel):
     username: str | None = None
     email: str | None = None
     role: UserRoleEnumModel | None = None
-
-
-
