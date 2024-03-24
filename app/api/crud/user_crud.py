@@ -16,6 +16,14 @@ from app.core.config import Auth, CustomException
 from app.celery_tasks.celery_worker import celery_app
 
 
+async def get_username_using_token(token: str):
+    try:
+        payload = jwt.decode(token, Auth.SECRET_KEY, algorithms=[Auth.ALGORITHM])
+        return payload.get("sub")
+    except jwt.PyJWTError as exception:
+        raise exception
+
+
 async def check_entity_or_throw_exception(entity: any, must_exist: bool, exception: CustomException):
     if must_exist:
         if not entity:
@@ -23,14 +31,6 @@ async def check_entity_or_throw_exception(entity: any, must_exist: bool, excepti
         else:
             return
     if entity:
-        raise exception
-
-
-async def get_username_using_token(token: str):
-    try:
-        payload = jwt.decode(token, Auth.SECRET_KEY, algorithms=[Auth.ALGORITHM])
-        return payload.get("sub")
-    except jwt.PyJWTError as exception:
         raise exception
 
 
@@ -64,6 +64,7 @@ async def delete_user(user: UserModel, db: AsyncSession):
 async def check_administrator_change(user: UserModel, new_user: UserCreateSchema):
     if user.role == UserRoleEnumModel.ADMIN and (user.username != new_user.username or user.email != new_user.email):
         return True
+    return False
 
 
 async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnumModel = UserRoleEnumModel.USER):
