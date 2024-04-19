@@ -34,3 +34,11 @@ async def update_user_password(new_password: str, current_user: UserModel = Depe
 @user_router.delete("/delete_user")
 async def delete_user(current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await user_crud.delete_user(user=current_user, db=db)
+
+
+@user_router.post("/send_notice_to_assigned_users")
+async def send_notice_to_assigned_users(assigned_user_ids: list[int],
+                                        current_user: UserModel = Depends(get_current_user),
+                                        db: AsyncSession = Depends(get_db)):
+    return await user_crud.send_notice_to_assigned_users(assigned_user_ids=assigned_user_ids,
+                                                         sender_username=current_user.username, db=db)

@@ -14,6 +14,8 @@ from app.api.schemas.user_schemas import UserCreateSchema, UserSchema
 from app.api.auth import pwd_context, create_access_token
 from app.core.config import Auth, CustomException
 from app.celery_tasks.celery_worker import celery_app
+from app.smtplib import email
+from app.api.crud.task_crud import get_users_by_ids
 
 
 async def get_username_using_token(token: str):
@@ -135,3 +137,11 @@ async def update_user_password(new_password: str, current_user: UserModel, db: A
     current_user.password_hash = pwd_context.hash(new_password)
     await db.commit()
     return f"Password was change to: {new_password}"
+
+
+async def send_notice_to_assigned_users(assigned_user_ids: list[int], sender_username: str, db: AsyncSession):
+    #TODO replace func get_users_by_ids to get_usernames_by_ids
+    assigned_users = await get_users_by_ids(user_ids=assigned_user_ids, db=db)
+    for assigned_user in assigned_users:
+        email.send_email.delay(recipient_email=assigned_user.email, sender_username=sender_username)
+    return "Email sent successfully"
