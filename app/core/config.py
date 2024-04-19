@@ -32,6 +32,13 @@ class Admin:
     EMAIL = os.environ.get("EMAIL")
 
 
+class SMTP:
+    SMTP_EMAIL = os.environ.get("SMTP_EMAIL")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587
+
+
 async def get_db():
     engine = create_async_engine(DataBase.DB_URL, future=True)
     async_session = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=AsyncSession)
