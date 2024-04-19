@@ -13,7 +13,8 @@ task_router = APIRouter()
 
 
 @task_router.get("/get_task_by_id")
-async def get_task_by_id(task_id: int, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_task_by_id(task_id: int, current_user: UserModel = Depends(get_current_user),
+                         db: AsyncSession = Depends(get_db)):
     return await task_crud.get_task_by_id(task_id=task_id, db=db)
 
 
@@ -30,16 +31,19 @@ async def assign_task_to_users(assign_task: AssignTaskSchema, current_user: User
 
 
 @task_router.put("/update_task")
-async def update_task(new_task: UpdateTaskSchema, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def update_task(new_task: UpdateTaskSchema, current_user: UserModel = Depends(get_current_user),
+                      db: AsyncSession = Depends(get_db)):
     return await task_crud.update_task(new_task=new_task, current_user=current_user, db=db)
 
 
 @task_router.delete("/remove_task_from_assignment_user")
-async def remove_task_from_assignment_user(assign_task: AssignTaskSchema, current_user: UserModel = Depends(get_current_user),
+async def remove_task_from_assignment_user(assign_task: AssignTaskSchema,
+                                           current_user: UserModel = Depends(get_current_user),
                                            db: AsyncSession = Depends(get_db)):
     return await task_crud.remove_task_from_assignment_users(assign_task=assign_task, current_user=current_user, db=db)
 
 
 @task_router.delete("/delete_task")
-async def delete_task(task_id: int, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def delete_task(task_id: int, current_user: UserModel = Depends(get_current_user),
+                      db: AsyncSession = Depends(get_db)):
     return await task_crud.delete_task(task_id=task_id, current_user=current_user, db=db)

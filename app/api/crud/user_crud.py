@@ -46,12 +46,13 @@ async def check_password_verify_or_throw_error(password: str, hash: str, excepti
         raise exception
 
 
-# TODO: hide password_hash!!!
 async def get_current_user(db: AsyncSession, token: str):
     username = await get_username_using_token(token=token)
-    await check_entity_or_throw_exception(entity=username, must_exist=True, exception=await CustomException.credentials_exception())
+    await check_entity_or_throw_exception(entity=username, must_exist=True,
+                                          exception=await CustomException.credentials_exception())
     user = await get_user_by_username(username=username, db=db)
-    await check_entity_or_throw_exception(entity=user, must_exist=True, exception=await CustomException.user_not_found())
+    await check_entity_or_throw_exception(entity=user, must_exist=True,
+                                          exception=await CustomException.user_not_found())
     return user
 
 
@@ -74,7 +75,8 @@ async def signup(new_user: UserCreateSchema, db: AsyncSession, role: UserRoleEnu
         if not await check_administrator_change(user=exist_user, new_user=new_user):
             return UserSchema(**exist_user.__dict__)
         await delete_user(exist_user, db=db)
-    await check_entity_or_throw_exception(entity=exist_user, must_exist=False, exception=await CustomException.user_already_exist())
+    await check_entity_or_throw_exception(entity=exist_user, must_exist=False,
+                                          exception=await CustomException.user_already_exist())
 
     new_user = UserModel(
         username=new_user.username,
@@ -97,7 +99,8 @@ async def login(form_data: OAuth2PasswordRequestForm, db: AsyncSession):
     await check_password_verify_or_throw_error(password=form_data.password, hash=user.password_hash,
                                                exception=await CustomException.incorrect_username_or_password())
 
-    access_token = await create_access_token(data={"sub": user.username}, expires_delta=timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES))
+    access_token = await create_access_token(data={"sub": user.username},
+                                             expires_delta=timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -113,7 +116,8 @@ async def create_moderator_user(user: UserCreateSchema, current_user: UserModel,
         raise await CustomException.not_enough_rights()
 
     user_in_database = await get_user_with_filter_or(UserSchema(username=user.username, email=user.email), db=db)
-    await check_entity_or_throw_exception(entity=user_in_database, must_exist=False, exception=await CustomException.user_already_exist())
+    await check_entity_or_throw_exception(entity=user_in_database, must_exist=False,
+                                          exception=await CustomException.user_already_exist())
 
     user = UserModel(
         username=user.username,

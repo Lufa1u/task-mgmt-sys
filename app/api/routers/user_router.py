@@ -14,7 +14,8 @@ user_router = APIRouter()
 
 
 @user_router.get("/get_current_user")
-async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="auth/login")), db: AsyncSession = Depends(get_db)):
+async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="auth/login")),
+                           db: AsyncSession = Depends(get_db)):
     return await user_crud.get_current_user(token=token, db=db)
 
 
@@ -25,7 +26,8 @@ async def create_moderator_user(user: UserCreateSchema, current_user: UserModel 
 
 
 @user_router.put("/update_user")
-async def update_user_password(new_password: str, current_user: UserModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def update_user_password(new_password: str, current_user: UserModel = Depends(get_current_user),
+                               db: AsyncSession = Depends(get_db)):
     return await user_crud.update_user_password(new_password=new_password, current_user=current_user, db=db)
 
 

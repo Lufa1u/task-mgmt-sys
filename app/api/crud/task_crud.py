@@ -71,7 +71,8 @@ async def assign_task_to_users(assign_task: AssignTaskSchema, role: UserRoleEnum
 async def remove_task_from_assignment_users(assign_task: AssignTaskSchema, current_user: UserModel, db: AsyncSession):
     await check_task_belongs_to_user_or_throw_exception(task_id=assign_task.task_id, user=current_user)
 
-    result = await db.execute(delete(user_task_association).where(((user_task_association.c.user_id.in_(assign_task.assigned_user_ids)) &
+    result = await db.execute(delete(user_task_association).where(((user_task_association.c.user_id.in_(
+        assign_task.assigned_user_ids)) &
         (user_task_association.c.task_id == assign_task.task_id) &
         (user_task_association.c.user_id != current_user.id))))
 
