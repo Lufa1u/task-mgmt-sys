@@ -16,6 +16,8 @@ services:
       dockerfile: dockerfile_celery
     ports:
       - "5555:5555"
+    environment:
+      - C_FORCE_ROOT=true
     depends_on:
       - rabbitmq
 

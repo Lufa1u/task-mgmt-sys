@@ -13,7 +13,7 @@ RUN useradd -rms /bin/bash task-mgmt-sys && chmod 777 /opt /run
 
 WORKDIR /task-mgmt-sys
 
-COPY --chown=task-mgmt-sys:task-mgmt-sys app .
+COPY --chown=task-mgmt-sys:task-mgmt-sys . .
 
 RUN pip install -r requirements.txt
 
