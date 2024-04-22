@@ -77,4 +77,3 @@ class CustomException(HTTPException):
     @classmethod
     async def custom_exception(cls, status_code: int, detail: str):
         return cls(status_code=status_code, detail=detail)
-
