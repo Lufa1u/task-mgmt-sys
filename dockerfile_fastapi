@@ -1,0 +1,20 @@
+FROM python:3.12
+
+SHELL ["/bin/bash", "-c"]
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN pip install --upgrade pip
+
+RUN apt update
+
+RUN useradd -rms /bin/bash task-mgmt-sys && chmod 777 /opt /run
+
+WORKDIR /task-mgmt-sys
+
+COPY --chown=task-mgmt-sys:task-mgmt-sys app .
+
+RUN pip install -r requirements.txt
+
+USER task-mgmt-sys
