@@ -1,0 +1,8 @@
+FROM python:3.12
+
+RUN pip install celery flower
+
+COPY ./app/celery_tasks .
+WORKDIR .
+
+CMD celery -A celery_worker:celery_app worker --loglevel=info & celery -A celery_worker:celery_app flower

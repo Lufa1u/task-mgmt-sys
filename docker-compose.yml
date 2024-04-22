@@ -1,0 +1,47 @@
+services:
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    command: >
+      sh -c "rabbitmq-plugins enable rabbitmq_management && rabbitmq-server"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: dockerfile_celery
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbitmq
+
+  task-mgmt-sys:
+    build:
+      context: .
+      dockerfile: dockerfile_fastapi
+    container_name: task-mgmt-sys
+    image: task-mgmt-sys:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    command: >
+      bash -c "alembic upgrade head | uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+    depends_on:
+      - rabbitmq
+      - postgres_db
+
+  postgres_db:
+    image: postgres:16
+    container_name: postgres
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+volumes:
+  postgres_db:
