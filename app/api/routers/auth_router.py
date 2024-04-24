@@ -22,3 +22,4 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     return await user_crud.login(form_data=form_data, db=db)
 
 
+
