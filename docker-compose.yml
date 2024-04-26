@@ -22,6 +22,12 @@ services:
       - "5555:5555"
     depends_on:
       - rabbitmq
+      - redis
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
 
   task-mgmt-sys:
     build:
@@ -36,6 +42,7 @@ services:
       bash -c "alembic upgrade head | uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
     depends_on:
       - rabbitmq
+      - redis
       - postgres_db
 
   postgres_db:
