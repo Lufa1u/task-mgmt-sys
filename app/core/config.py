@@ -39,6 +39,10 @@ class SMTP:
     smtp_port = 587
 
 
+class CeleryConfig:
+    BROKER_URL = os.environ.get("BROKER_URL")
+    RESULT_BACKEND = os.environ.get("RESULT_BACKEND")
+
 async def get_db():
     engine = create_async_engine(DataBase.DB_URL, future=True)
     async_session = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=AsyncSession)
