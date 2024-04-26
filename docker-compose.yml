@@ -14,10 +14,12 @@ services:
     build:
       context: .
       dockerfile: dockerfile_celery
-    ports:
-      - "5555:5555"
+    command: >
+      bash -c "celery -A app.celery_tasks.celery_worker worker | celery -A app.celery_tasks.celery_worker flower"
     environment:
       - C_FORCE_ROOT=true
+    ports:
+      - "5555:5555"
     depends_on:
       - rabbitmq
 
@@ -26,7 +28,6 @@ services:
       context: .
       dockerfile: dockerfile_fastapi
     container_name: task-mgmt-sys
-    image: task-mgmt-sys:latest
     ports:
       - "8000:8000"
     env_file:

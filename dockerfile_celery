@@ -1,9 +1,9 @@
 FROM python:3.12
 
-RUN pip install celery flower
+RUN pip install --upgrade pip
 
-COPY ./app/celery_tasks ./app/celery_tasks
-WORKDIR /app/celery_tasks
+WORKDIR /task-mgmt-sys
 
-CMD celery -A celery_worker worker --loglevel=info
-CMD celery -A celery_worker flower
+COPY --chown=task-mgmt-sys:task-mgmt-sys . .
+
+RUN pip install -r requirements.txt
